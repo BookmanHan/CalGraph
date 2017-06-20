@@ -35,13 +35,13 @@ namespace cal
 				af::array& grad) const
 			{
 				derv_grad = moment * derv_grad + (1 - moment) * grad * grad;
-
-				derv_grad = moment * derv_grad + (1 - moment) * grad * grad;
 				af::array derv_elem = af::sqrt(derv_x + regularization) 
 					/ af::sqrt(derv_grad + regularization) * grad;
-				derv_x = moment * derv_x + (1 - moment) * derv_elem * derv_elem;
 
+				derv_x = moment * derv_x + (1 - moment) * derv_elem * derv_elem;
 				elem -= derv_elem;
+
+				af::eval(derv_grad, derv_elem, derv_x, elem);
 			}
 		};
 

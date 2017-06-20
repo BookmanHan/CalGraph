@@ -101,19 +101,23 @@ namespace cal
 		{
 			while (epos-- > 0)
 			{
-				af::timer timer;
-				timer.start();
+				af::timer timer_f;
+				timer_f.start();
 
 				calculas();
+				cout << "\tTime = " << timer_f.stop() << endl;
+
 				cout << "[CalGraph] Losses of " <<epos<< endl;
 				for (auto i = Losses.begin(); i != Losses.end(); ++i)
 				{
 					cout << "\tLoss of " << i->second << endl;
 					af_print(i->first->value_forward);
 				}
-				update();
 
-				cout << "\tTime = " << timer.stop() << endl;
+				af::timer timer_b;
+				timer_b.start();
+				update();
+				cout << "\tTime = " << timer_b.stop() << endl;
 			}
 		}
 	};

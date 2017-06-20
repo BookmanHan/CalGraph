@@ -10,40 +10,36 @@ using namespace cal::objective;
 
 int main(int argc, char **argv)
 {
-	af::array input = af::randn(10, 10);
+	int n_sample = 1000;
+	int n_feature = 100;
+
+	af::array input = af::randn(n_sample, n_feature);
 	input(af::seq(0, af::end, 2), af::span) += 10.0f;
 
-	af::array output = af::randn(10, 2);
+	af::array output = af::randn(n_sample, 2);
 	output(af::seq(0, af::end, 2), af::span) = 0.9;
 	output(af::seq(1, af::end, 2), af::span) = 0.1;
 
-	af::array hids = af::constant(0.f, 10, 10);
-	af::array bitmask = af::constant(0, 10, 10, 30, u8);
-	bitmask(af::span, af::span, af::seq(0, 20)) = 1;
+	af::array hids = af::constant(0.f, n_sample, n_feature);
 	
 	CalGraph cg;
 
 	autoref x = cg.datum(input);
 	autoref y = cg.datum(output);
-	autoref mask = cg.datum(bitmask);
 
-	autoref W1 = cg.variable_xavier(10, 10);
-	autoref W2 = cg.variable_xavier(10, 10);
-	autoref W3 = cg.variable_xavier(10, 2);
+	autoref W1 = cg.variable_xavier(n_feature, n_feature);
+	autoref W2 = cg.variable_xavier(n_feature, n_feature);
+	autoref W3 = cg.variable_xavier(n_feature, 2);
 
 	auto hidden = &(cg.datum(hids));
-	auto loss = &(cg.datum(af::constant(0.f, 10, 2)));
+	auto loss = &(cg.datum(af::constant(0.f, n_sample, 2)));
 
 	int n = 0;
-	for(int i=0; i<20; ++i)
+	for(int i=0; i<15; ++i)
 	{
-		//autoref step = cg.datum(n++);
 		hidden = &(tanh(x * W1 + (*hidden) * W2));
-		//hidden = &(*hidden % slice(3, mask, step));
-
-		autoref rep = (*hidden) * W3;
-
-		loss = &(*loss + (rep - y) % (rep - y));
+		autoref rep = softmax((*hidden) * W3);
+		loss = &(*loss + cross_entropi(rep, y));
 	}
 
 	cg.loss(*loss, "RNN");
