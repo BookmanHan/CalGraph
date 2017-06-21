@@ -191,14 +191,15 @@ namespace cal
 	public:
 		virtual void forward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
 			value_forward = sym_in[0]->value_forward(*value_index, af::span, af::span, af::span);
 		}
 
 		virtual void backward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
-			sym_in[0]->value_backward(*value_index, af::span, af::span, af::span) = value_backward;
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
+			if (sym_in[0]->is_datum() == false)
+				sym_in[0]->value_backward(*value_index, af::span, af::span, af::span) = value_backward;
 		}
 	};
 
@@ -208,14 +209,15 @@ namespace cal
 	public:
 		virtual void forward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
 			value_forward = sym_in[0]->value_forward(af::span, *value_index, af::span, af::span);
 		}
 
 		virtual void backward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
-			sym_in[0]->value_backward(af::span, *value_index, af::span, af::span) = value_backward;
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
+			if (sym_in[0]->is_datum() == false)
+				sym_in[0]->value_backward(af::span, *value_index, af::span, af::span) = value_backward;
 		}
 	};
 
@@ -225,15 +227,15 @@ namespace cal
 	public:
 		virtual void forward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
 			value_forward = sym_in[0]->value_forward(af::span, af::span, *value_index, af::span);
-			af_print(value_forward);
 		}
 
 		virtual void backward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
-			sym_in[0]->value_backward(af::span, af::span, *value_index, af::span) = value_backward;
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
+			if (sym_in[0]->is_datum() == false)
+				sym_in[0]->value_backward(af::span, af::span, *value_index, af::span) = value_backward;
 		}
 	};
 
@@ -243,14 +245,15 @@ namespace cal
 	public:
 		virtual void forward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
 			value_forward = sym_in[0]->value_forward(af::span, af::span, af::span, *value_index);
 		}
 
 		virtual void backward() override
 		{
-			int* value_index = sym_in[1]->value_forward(0).device<int>();
-			sym_in[0]->value_backward(af::span, af::span, af::span, *value_index) = value_backward;
+			int* value_index = sym_in[1]->value_forward(0).host<int>();
+			if (sym_in[0]->is_datum() == false)
+				sym_in[0]->value_backward(af::span, af::span, af::span, *value_index) = value_backward;
 		}
 	};
 
@@ -272,15 +275,15 @@ namespace cal
 		case 4:
 			node = new SymView4D;
 			break;
+		default:
+			throw af::exception("Slice(): Dimension is incorrect.");
+			break;
 		}
 
-		if (!node)
-		{
-			node->sym_in.push_back(&src);
-			node->sym_in.push_back(&index);
-			src.sym_out.push_back(node);
-			index.sym_out.push_back(node);
-		}
+		node->sym_in.push_back(&src);
+		node->sym_in.push_back(&index);
+		src.sym_out.push_back(node);
+		index.sym_out.push_back(node);
 
 		return *node;
 	}

@@ -97,12 +97,14 @@ namespace cal
 			}
 		}
 
-		void train(int epos)
+		void train(int epos, function<void(int epos)> batch = [](int) {})
 		{
 			while (epos-- > 0)
 			{
 				af::timer timer_f;
 				timer_f.start();
+
+				batch(epos);
 
 				calculas();
 				cout << "\tTime = " << timer_f.stop() << endl;

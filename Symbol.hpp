@@ -45,7 +45,6 @@ namespace cal
 		virtual void set(int index)
 		{
 			value_forward = af::constant(index, 1, s32);
-			reset_gradient();
 		}
 
 		virtual void set(af::array& content)
@@ -95,6 +94,22 @@ namespace cal
 				(*i)->trigger_backward();
 			}
 		}
+
+	public:
+		virtual bool is_datum()
+		{
+			return false;
+		}
+
+		virtual bool is_variable()
+		{
+			return false;
+		}
+
+		virtual bool is_loss()
+		{
+			return false;
+		}
 	};
 
 	class SymVariable
@@ -130,6 +145,12 @@ namespace cal
 			value_backward.eval();
 			cal::Solver::global_calc_graph_solver->gradient(value_backward_grad, value_backward_x, value_forward, value_backward);
 		}
+
+	public:
+		virtual bool is_variable()
+		{
+			return true;
+		}
 	};
 
 	class SymLoss
@@ -157,6 +178,12 @@ namespace cal
 				sym_in[0]->value_forward.dims(2),
 				sym_in[0]->value_forward.dims(3));
 		}
+
+	public:
+		virtual bool is_loss()
+		{
+			return true;
+		}
 	};
 
 	class SymDatum
@@ -172,6 +199,12 @@ namespace cal
 		{
 			reset_gradient();
 			inputs.push_back(this);
+		}
+
+	public:
+		virtual bool is_datum()
+		{
+			return true;
 		}
 	};
 

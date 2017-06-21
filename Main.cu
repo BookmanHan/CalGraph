@@ -21,29 +21,52 @@ int main(int argc, char **argv)
 	output(af::seq(1, af::end, 2), af::span) = 0.1;
 
 	af::array hids = af::constant(0.f, n_sample, n_feature);
-	
+	af::array bitmask = af::constant(0, n_sample, n_feature, 20, u8);
+	bitmask(af::span, af::span, af::seq(0, 15)) = 1;
+
 	CalGraph cg;
 
 	autoref x = cg.datum(input);
 	autoref y = cg.datum(output);
+	autoref mask = cg.datum(bitmask);
 
 	autoref W1 = cg.variable_xavier(n_feature, n_feature);
 	autoref W2 = cg.variable_xavier(n_feature, n_feature);
 	autoref W3 = cg.variable_xavier(n_feature, 2);
+	autoref W4 = cg.variable_xavier(n_feature, n_feature);
+	autoref W5 = cg.variable_xavier(n_feature, n_feature);
 
 	auto hidden = &(cg.datum(hids));
 	auto loss = &(cg.datum(af::constant(0.f, n_sample, 2)));
 
 	int n = 0;
-	for(int i=0; i<15; ++i)
+	for(int i=0; i<20; ++i)
 	{
 		hidden = &(tanh(x * W1 + (*hidden) * W2));
-		autoref rep = softmax((*hidden) * W3);
+		hidden = &(*hidden % slice(3, mask, cg.datum(n++)));
+	}
+
+	for (int i = 0; i < 20; ++i)
+	{
+		autoref rep = softmax(((*hidden) * W5 + x * W4) * W3);
 		loss = &(*loss + cross_entropi(rep, y));
 	}
 
 	cg.loss(*loss, "RNN");
-	cg.train(10000);
+
+	try
+	{
+		cg.train(10000,
+			[&](int epos)
+		{
+			x.set(input);
+			y.set(output);
+		});
+	}
+	catch (af::exception e)
+	{
+		cout << e.what() << endl;
+	}
 
 	return 0;
 }
