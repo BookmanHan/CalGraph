@@ -287,4 +287,16 @@ namespace cal
 
 		return *node;
 	}
+
+	Symbol& embed(Symbol& src, Symbol& ind)
+	{
+		Symbol* node = new SymEmbeddingNode;
+
+		node->sym_in.push_back(&src);
+		node->sym_in.push_back(&ind);
+		src.sym_out.push_back(node);
+		ind.sym_out.push_back(node);
+
+		return *node;
+	}
 }

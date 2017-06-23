@@ -54,12 +54,12 @@ namespace cal
 
 		void reset_gradient()
 		{
-			value_backward_grad = af::constant(0.f, 
-				value_forward.dims(0), 
+			value_backward_grad = af::constant(0.f,
+				value_forward.dims(0),
 				value_forward.dims(1),
 				value_forward.dims(2),
 				value_forward.dims(3));
-			value_backward_x = af::constant(0.f, 
+			value_backward_x = af::constant(0.f,
 				value_forward.dims(0),
 				value_forward.dims(1),
 				value_forward.dims(2),
@@ -142,7 +142,6 @@ namespace cal
 	public:
 		virtual void backward() override
 		{
-			value_backward.eval();
 			cal::Solver::global_calc_graph_solver->gradient(value_backward_grad, value_backward_x, value_forward, value_backward);
 		}
 
@@ -150,6 +149,60 @@ namespace cal
 		virtual bool is_variable()
 		{
 			return true;
+		}
+	};
+
+	class SymEmbedding
+		:public SymVariable
+	{
+	public:
+		SymEmbedding()
+		{
+
+		}
+
+		SymEmbedding(vector<Symbol*>& inputs)
+		{
+			inputs.push_back(this);
+		}
+
+	public:
+		virtual void set(int index)
+		{
+			value_forward = af::constant(index, 1, s32);
+			reset_gradient();
+		}
+
+		virtual void set(af::array& content)
+		{
+			value_forward = content;
+			reset_gradient();
+		}
+
+	public:
+		virtual bool is_variable()
+		{
+			return true;
+		}
+	};
+
+	class SymEmbeddingNode
+		:public Symbol
+	{
+	public:
+		virtual void forward() override
+		{
+			value_forward = sym_in[0]->value_forward(af::flat(sym_in[1]->value_forward), af::span, af::span, af::span);
+		}
+
+		virtual void backward() override
+		{
+			cal::Solver::global_calc_graph_solver->gradient
+			(sym_in[0]->value_backward_grad,
+				sym_in[0]->value_backward_x,
+				sym_in[0]->value_forward,
+				value_backward,
+				af::flat(sym_in[1]->value_forward));
 		}
 	};
 

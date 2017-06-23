@@ -43,6 +43,30 @@ namespace cal
 
 				af::eval(derv_grad, derv_elem, derv_x, elem);
 			}
+
+			void gradient(
+				af::array& derv_grad,
+				af::array& derv_x,
+				af::array& elem,
+				af::array& grad,
+				af::array& indx) const
+			{
+				derv_grad(indx, af::span, af::span, af::span) = 
+					moment * derv_grad(indx, af::span, af::span, af::span) 
+					+ (1 - moment) 
+					* grad(indx, af::span, af::span, af::span) 
+					* grad(indx, af::span, af::span, af::span);
+				af::array derv_elem = af::sqrt(derv_x(indx, af::span, af::span, af::span) + regularization)
+					/ af::sqrt(derv_grad(indx, af::span, af::span, af::span) + regularization) 
+					* grad(indx, af::span, af::span, af::span);
+
+				derv_x(indx, af::span, af::span, af::span) = 
+					moment * derv_x(indx, af::span, af::span, af::span) 
+					+ (1 - moment) * derv_elem * derv_elem;
+				elem(indx, af::span, af::span, af::span) -= derv_elem;
+
+				//af::eval(derv_grad, derv_elem, derv_x, elem);
+			}
 		};
 
 		DecentAdaDelta* global_calc_graph_solver = new DecentAdaDelta(0.6, 1e-6);

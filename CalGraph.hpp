@@ -32,6 +32,16 @@ namespace cal
 			return *node;
 		}
 
+		Symbol& variable_embedding(af::array& src)
+		{
+			auto node = new SymEmbedding;
+
+			node->set(src);
+			Variables.push_back(node);
+
+			return *node;
+		}
+
 		Symbol& variable(af::array& src)
 		{
 			auto node = new SymVariable;
