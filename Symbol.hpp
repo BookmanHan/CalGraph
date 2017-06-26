@@ -186,7 +186,7 @@ namespace cal
 		}
 	};
 
-	class SymEmbeddingNode
+	class SymEmbeddingNodeUpdatable
 		:public Symbol
 	{
 	public:
@@ -203,6 +203,21 @@ namespace cal
 				sym_in[0]->value_forward,
 				value_backward,
 				af::flat(sym_in[1]->value_forward));
+		}
+	};
+
+	class SymEmbeddingNodeFixed
+		:public Symbol
+	{
+	public:
+		virtual void forward() override
+		{
+			value_forward = sym_in[0]->value_forward(af::flat(sym_in[1]->value_forward), af::span, af::span, af::span);
+		}
+
+		virtual void backward() override
+		{
+			;
 		}
 	};
 
@@ -280,6 +295,33 @@ namespace cal
 	{
 		Symbol* node = new SymConst;
 		node->value_forward = const_mat;
+
+		return *node;
+	}
+
+	class SymPrint
+		:public Symbol
+	{
+	public:
+		virtual void forward() override
+		{
+			value_forward = sym_in[0]->value_forward;
+			af_print(value_forward);
+		}
+
+		virtual void backward() override
+		{
+			sym_in[0]->value_backward = value_backward;
+			af_print(value_backward);
+		}
+	};
+
+	Symbol& print(Symbol& src)
+	{
+		Symbol* node = new SymPrint;
+
+		node->sym_in.push_back(&src);
+		src.sym_out.push_back(node);
 
 		return *node;
 	}

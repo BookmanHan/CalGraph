@@ -122,8 +122,8 @@ namespace cal
 				cout << "[CalGraph] Losses of " <<epos<< endl;
 				for (auto i = Losses.begin(); i != Losses.end(); ++i)
 				{
-					cout << "\tLoss of " << i->second << endl;
-					af_print(i->first->value_forward);
+					float* value = i->first->value_forward.host<float>();
+					cout << "\tLoss of " << *value << endl;
 				}
 
 				af::timer timer_b;

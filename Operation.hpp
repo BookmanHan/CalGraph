@@ -288,9 +288,13 @@ namespace cal
 		return *node;
 	}
 
-	Symbol& embed(Symbol& src, Symbol& ind)
+	Symbol& embed(Symbol& src, Symbol& ind, bool be_fixed = true)
 	{
-		Symbol* node = new SymEmbeddingNode;
+		Symbol* node = nullptr;
+		if (be_fixed == true)
+			node = new SymEmbeddingNodeFixed;
+		else
+			node = new SymEmbeddingNodeUpdatable;
 
 		node->sym_in.push_back(&src);
 		node->sym_in.push_back(&ind);
