@@ -1,6 +1,7 @@
 #pragma once
 #include "Import.hpp"
 #include "Solver.hpp"
+#include "Logging.hpp"
 
 namespace cal
 {
@@ -72,12 +73,13 @@ namespace cal
 		}
 
 	public:
-		void trigger_forward()
+		virtual void trigger_forward()
 		{
 			++cur_sym_in;
 			if (cur_sym_in >= sym_in.size())
 			{
 				forward();
+				af::eval(value_forward);
 				for (auto i = sym_out.begin(); i != sym_out.end(); ++i)
 				{
 					(*i)->trigger_forward();
@@ -86,8 +88,9 @@ namespace cal
 			}
 		}
 
-		void trigger_backward()
+		virtual void trigger_backward()
 		{
+			af::eval(value_backward);
 			backward();
 			for (auto i = sym_in.begin(); i != sym_in.end(); ++i)
 			{
@@ -240,11 +243,7 @@ namespace cal
 		virtual void backward() override
 		{
 			value_backward = af::constant(1, 1, 1.f);
-			sym_in[0]->value_backward = af::constant(1.f,
-				sym_in[0]->value_forward.dims(0),
-				sym_in[0]->value_forward.dims(1),
-				sym_in[0]->value_forward.dims(2),
-				sym_in[0]->value_forward.dims(3));
+			sym_in[0]->value_backward = af::constant(1.f, sym_in[0]->value_forward.dims());
 		}
 
 	public:
@@ -312,6 +311,7 @@ namespace cal
 		virtual void backward() override
 		{
 			sym_in[0]->value_backward = value_backward;
+			logout.record();
 			af_print(value_backward);
 		}
 	};
@@ -319,6 +319,33 @@ namespace cal
 	Symbol& print(Symbol& src)
 	{
 		Symbol* node = new SymPrint;
+
+		node->sym_in.push_back(&src);
+		src.sym_out.push_back(node);
+
+		return *node;
+	}
+
+	class SymPrintDim
+		:public Symbol
+	{
+	public:
+		virtual void forward() override
+		{
+			value_forward = sym_in[0]->value_forward;
+			logout.record() << '[' << value_forward.dims() << ']';
+		}
+
+		virtual void backward() override
+		{
+			sym_in[0]->value_backward = value_backward;
+			logout.record() << '[' << value_backward.dims() << ']';
+		}
+	};
+
+	Symbol& dim(Symbol& src)
+	{
+		Symbol* node = new SymPrintDim;
 
 		node->sym_in.push_back(&src);
 		src.sym_out.push_back(node);

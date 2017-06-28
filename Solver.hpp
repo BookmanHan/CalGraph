@@ -65,7 +65,7 @@ namespace cal
 					+ (1 - moment) * derv_elem * derv_elem;
 				elem(indx, af::span, af::span, af::span) -= derv_elem;
 
-				//af::eval(derv_grad, derv_elem, derv_x, elem);
+				af::eval(derv_grad, derv_elem, derv_x, elem);
 			}
 		};
 

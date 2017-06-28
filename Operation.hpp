@@ -173,6 +173,36 @@ namespace cal
 		}
 	};
 
+	class SymPowerFloat
+		:public Symbol
+	{
+	public:
+		double p;
+	public:
+		virtual void forward() override
+		{
+			value_forward = af::pow(sym_in[0]->value_forward, p);
+		}
+
+		virtual void backward() override
+		{
+			sym_in[0]->value_backward =
+				value_backward
+				* p * af::pow(sym_in[0]->value_forward, p - 1);
+		}
+	};
+
+	Symbol& operator^(Symbol& a, float b)
+	{
+		Symbol* node = new SymPowerFloat;
+		((SymPowerFloat*)node)->p = b;
+
+		node->sym_in.push_back(&a);
+		a.sym_out.push_back(node);
+
+		return *node;
+	}
+
 	Symbol& operator^(Symbol& a, Symbol& b)
 	{
 		Symbol* node = new SymPower;

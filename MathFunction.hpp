@@ -327,7 +327,7 @@ namespace cal
 		public:
 			virtual void forward() override
 			{
-				value_forward = - sym_in[0]->value_forward;
+				value_forward = 1.0 - sym_in[0]->value_forward;
 			}
 
 			virtual void backward() override
@@ -377,9 +377,7 @@ namespace cal
 		public:
 			virtual void forward() override
 			{
-				value_forward = af::constant(af::sum<float>(sym_in[0]->value_forward), 
-					sym_in[0]->value_forward.dims(0), sym_in[0]->value_forward.dims(1), 
-					sym_in[0]->value_forward.dims(2), sym_in[0]->value_forward.dims(3));
+				value_forward = af::tile(af::sum(sym_in[0]->value_forward, 1), 1, sym_in[0]->value_forward.dims(1));
 			}
 
 			virtual void backward() override
@@ -391,6 +389,32 @@ namespace cal
 		Symbol& sum(Symbol& a)
 		{
 			Symbol* node = new SymSum;
+
+			node->sym_in.push_back(&a);
+			a.sym_out.push_back(node);
+
+			return *node;
+		}
+
+		class SymScalarSum
+			:public Symbol
+		{
+		public:
+			virtual void forward() override
+			{
+				value_forward = 
+					af::sum(sym_in[0]->value_forward, 1);
+			}
+
+			virtual void backward() override
+			{
+				sym_in[0]->value_backward = af::tile(value_backward, 1, sym_in[0]->value_forward.dims(1));
+			}
+		};
+
+		Symbol& scalar_sum(Symbol& a)
+		{
+			Symbol* node = new SymScalarSum;
 
 			node->sym_in.push_back(&a);
 			a.sym_out.push_back(node);

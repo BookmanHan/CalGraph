@@ -1,6 +1,8 @@
 #pragma once
 #include "Import.hpp"
 #include "Symbol.hpp"
+#include "Logging.hpp"
+
 #define autoref auto&
 namespace cal
 {
@@ -117,19 +119,19 @@ namespace cal
 				batch(epos);
 
 				calculas();
-				cout << "\tTime = " << timer_f.stop() << endl;
+				logout.record() << "\t[Forward] Time = " << timer_f.stop();
 
-				cout << "[CalGraph] Losses of " <<epos<< endl;
+				logout.record() << "[CalGraph] Losses of " <<epos;
 				for (auto i = Losses.begin(); i != Losses.end(); ++i)
 				{
 					float* value = i->first->value_forward.host<float>();
-					cout << "\tLoss of " << *value << endl;
+					logout.record() << "\tLoss of " << *value;
 				}
 
 				af::timer timer_b;
 				timer_b.start();
 				update();
-				cout << "\tTime = " << timer_b.stop() << endl;
+				logout.record() << "\t[Backward] Time = " << timer_b.stop();
 			}
 		}
 	};

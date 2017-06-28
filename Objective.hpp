@@ -11,7 +11,9 @@ namespace cal
 	{
 		Symbol& cross_entropi(Symbol& y, Symbol& target)
 		{
-			return y % log(target) + neg(y) % neg(target);
+			return
+				y % log(target)
+				+ neg(y) % log(neg(target));
 		}
 
 		Symbol& softmax(Symbol& x)
