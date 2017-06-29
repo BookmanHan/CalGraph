@@ -53,19 +53,17 @@ namespace cal
 			{
 				derv_grad(indx, af::span, af::span, af::span) = 
 					moment * derv_grad(indx, af::span, af::span, af::span) 
-					+ (1 - moment) 
-					* grad(indx, af::span, af::span, af::span) 
-					* grad(indx, af::span, af::span, af::span);
-				af::array derv_elem = af::sqrt(derv_x(indx, af::span, af::span, af::span) + regularization)
+					+ (1 - moment) * grad * grad;
+				af::array derv_elem = 
+					af::sqrt(derv_x(indx, af::span, af::span, af::span) + regularization)
 					/ af::sqrt(derv_grad(indx, af::span, af::span, af::span) + regularization) 
-					* grad(indx, af::span, af::span, af::span);
-
+					* grad;
 				derv_x(indx, af::span, af::span, af::span) = 
 					moment * derv_x(indx, af::span, af::span, af::span) 
 					+ (1 - moment) * derv_elem * derv_elem;
 				elem(indx, af::span, af::span, af::span) -= derv_elem;
 
-				af::eval(derv_grad, derv_elem, derv_x, elem);
+				//af::eval(derv_grad, derv_elem, derv_x, elem);
 			}
 		};
 
